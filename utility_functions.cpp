@@ -66,8 +66,8 @@ double utility_functions::scintillation_function(const double *t, const double *
 
 // function to create scintillation function TF1 with required parameters
 void utility_functions::initalise_scintillation_functions_argon(const double t_singlet, const double t_triplet, const double singlet_fraction_electron,
-																const double triplet_fraction_electron, const double singlet_fraction_alpha, const double triplet_fraction_alpha,
-																const double scint_time_window) {
+					const double triplet_fraction_electron, const double singlet_fraction_alpha, const double triplet_fraction_alpha,
+		                	const double scint_time_window) {
 
 	// create scintillation spectrum for electrons
 	fScintillation_function_electron = new TF1("Scintillation Timing", scintillation_function, 0, scint_time_window, 4);

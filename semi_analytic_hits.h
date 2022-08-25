@@ -27,8 +27,8 @@ private:
 	//                    	OPTICAL DETECTOR SHAPE/SIZE
 	// *************************************************************************************************
 	// Supercells: type = 1;
-	double y_dimension_detector = 100;	// cm
-	double z_dimension_detector = 100;	// cm
+	double y_dimension_detector = 9.3;	// cm
+	double z_dimension_detector = 46.8;	// cm
 	// PMTs: type = 0;
 	double radius = 8*2.54/2.;	//	8" PMT diameter  // cm
 
@@ -117,6 +117,10 @@ private:
 	// centre coordinates
 	// Dune
 	const double x_foils = 363.38405; const double y_foils = 0; const double z_foils = 696.294;	// cm
+
+	const double center_x_1 = 0;   const double center_y_1 = 300; const double center_z_1 = 200;	// cm
+	const double center_x_2 = 150; const double center_y_2 =   0; const double center_z_2 = 200;	// cm
+	const double center_x_3 = 150; const double center_y_3 = 300; const double center_z_3 = 400;	// cm
 
 	// DUNE-SP corrections
 	// Argon, flat PDs (Arapucas/Supercells)
@@ -344,6 +348,7 @@ public:
 	// linear interpolation function
 	double interpolate( const std::vector<double> &xData, const std::vector<double> &yData, double x, bool extrapolate );
 	double LArQL(const double energy_deposit, const double hit_distance, const double electric_field);
+	void setPixelSize(const double y, const double z);
 
 };
 

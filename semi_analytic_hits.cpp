@@ -3,6 +3,7 @@
 // implementation of semi-analytic model for number of incident photons
 
 #include <iostream>
+#include<fstream>
 #include <cmath>
 
 #include "TRandom.h"
@@ -12,7 +13,7 @@
 #include "Math/SpecFuncMathMore.h"
 
 using namespace std;
-
+bool debug_2 = false;
 // constructor
 semi_analytic_hits::semi_analytic_hits() {
 
@@ -28,11 +29,18 @@ semi_analytic_hits::semi_analytic_hits() {
 
 }
 
+void semi_analytic_hits::setPixelSize(const double y,const double z){
+	y_dimension_detector = y;	// cm
+	z_dimension_detector = z;	// cm
+
+}
+
 double semi_analytic_hits::LArQL(const double energy_deposit, const double hit_distance, const double electric_field){
+	// returns number of expected photons
        double Edep = energy_deposit/hit_distance;
        if(Edep<1.0){
-	       std::cout << "WARNING: LArQL not able to calculate the light yield for energy deposit less than 1 MeV/cm." << std::endl;
-	       std::cout << "	 Edep is set from " << Edep << " to 1.0" << std::endl;
+	       //std::cout << "WARNING: LArQL not able to calculate the light yield for energy deposit less than 1 MeV/cm." << std::endl;
+	       //std::cout << "	 Edep is set from " << Edep << " to 1.0" << std::endl;
 	       Edep = 1.0;
 	}
        double QChi = chi_param[0]/(chi_param[1]+exp(chi_param[3] + chi_param[4]*Edep));
@@ -44,62 +52,71 @@ int semi_analytic_hits::VUVHits(const int &Nphotons_created, const TVector3 &Sci
 
   // distance and angle between ScintPoint and OpDetPoint
   double distance = sqrt(pow(ScintPoint[0] - OpDetPoint[0],2) + pow(ScintPoint[1] - OpDetPoint[1],2) + pow(ScintPoint[2] - OpDetPoint[2],2));
-  double cosine = sqrt(pow(ScintPoint[0] - OpDetPoint[0],2)) / distance;
-  double theta = acos(cosine)*180./pi;
+  double cosine;
+  double theta;
 
+  // distance from center for border corrections
+  double r_distance = -1;
   // calculate solid angle:
-  double solid_angle = 0;
+  double solid_angle = -1;
   // rectangular aperture
   if (optical_detector_type == 1) {
     // set Arapuca geometry struct for solid angle function
     acc detPoint;
-
-	// We can change the orientation for the solid angle to match the solid angle definiton in the already impleemnted code
-     //direction 1 = x, direciton 2 = y, direction 3 = z
-    /* std::cout << " ScintPoint and OpDetPoint " << std::endl; */
-    /* std::cout << ScintPoint[0] << " " << ScintPoint[1] << " " << ScintPoint[2] << std::endl; */
-    /* std::cout << OpDetPoint[0] << " " << OpDetPoint[1] << " " << OpDetPoint[2] << std::endl; */
-    /* std::cout << " REORDERING DETECTOR & SCINT POINT according to " << optical_direction << std::endl; */
     TVector3 ScintPoint_Temp = ScintPoint;
     TVector3 OpDetPoint_Temp = OpDetPoint;
     if(optical_direction == 1){
 	    detPoint.ax = OpDetPoint[0]; detPoint.ay = OpDetPoint[1]; detPoint.az = OpDetPoint[2];
+  	    cosine = sqrt(pow(ScintPoint[0] - OpDetPoint[0],2)) / distance;
+	    r_distance = sqrt( pow(ScintPoint[1] - center_y_1, 2) + pow(ScintPoint[2] - center_z_1, 2));
     }  // centre coordinates of optical detector
     else if(optical_direction == 2){
 	    detPoint.ax = OpDetPoint[1]; detPoint.ay = OpDetPoint[0]; detPoint.az = OpDetPoint[2];
 	    OpDetPoint_Temp[0] = detPoint.ax; OpDetPoint_Temp[1] = detPoint.ay; OpDetPoint_Temp[2] = detPoint.az;
 	    ScintPoint_Temp[0] = ScintPoint[1]; ScintPoint_Temp[1] = ScintPoint[0];
+  	    cosine = sqrt(pow(ScintPoint[1] - OpDetPoint[1],2)) / distance;
+	    r_distance = sqrt( pow(ScintPoint[0] - center_x_2, 2) + pow(ScintPoint[2] - center_z_2, 2));
     }  // centre coordinates of optical detector
     else if(optical_direction == 3){
 	    detPoint.ax = OpDetPoint[2]; detPoint.ay = OpDetPoint[1]; detPoint.az = OpDetPoint[0];
 	    OpDetPoint_Temp[0] = detPoint.ax; OpDetPoint_Temp[1] = detPoint.ay; OpDetPoint_Temp[2] = detPoint.az;
 	    ScintPoint_Temp[0] = ScintPoint[2]; ScintPoint_Temp[2] = ScintPoint[0];
+  	    cosine = sqrt(pow(ScintPoint[2] - OpDetPoint[2],2)) / distance;
+	    r_distance = sqrt( pow(ScintPoint[0] - center_x_3, 2) + pow(ScintPoint[1] - center_y_3, 2));
     }  // centre coordinates of optical detector
     else {std::cout << "Error: optical_direction not set correctly" << std::endl; exit(1);}
+
 
     detPoint.w = y_dimension_detector; detPoint.h = z_dimension_detector; // width and height in cm of arapuca active window
     TVector3 ScintPoint_rel = ScintPoint_Temp - OpDetPoint_Temp;
 
     // calculate solid angle
     solid_angle = solid(detPoint, ScintPoint_rel);
+    assert(r_distance >= 0 && solid_angle >= 0);
   }
    else {
     std::cout << "Error: Invalid optical detector type." << endl;
     exit(1);
   }
 
+  theta = acos(cosine)*180./pi;
   // calculate number of photons hits by geometric acceptance: accounting for solid angle and LAr absorbtion length
   double hits_geo = exp(-1.*distance/L_abs) * (solid_angle / (4*pi)) * Nphotons_created;
+  if(debug_2){
+  cout << "solid_angle: " << solid_angle << endl;
+  cout << "Nphotons_created: " << Nphotons_created << endl;
+  cout << "Geometric accepted gammas: " << hits_geo << endl;
+  }
+
 
   // determine Gaisser-Hillas correction for Rayleigh scattering distance and angular dependence, accounting for border effects
   // offset angle bin
+  // TODO:
+  if(theta>80.0) return hits_geo;
   int j = (theta/delta_angle);
 
   /* std::cout << " theta = " << theta << " delta_angle = " << delta_angle << " j = " << j << std::endl; */
-  // distance from center for border corrections
-  // TODO: check if this is correct - we do not want any reflection - so I can set this to 0 right?
-  double r_distance = 0; //sqrt( pow(ScintPoint[1] - y_foils, 2) + pow(ScintPoint[2] - z_foils, 2));
-  // identify GH parameters and border corrections by optical detector type and scintillation type
+    // identify GH parameters and border corrections by optical detector type and scintillation type
   double pars_ini[4] = {0,0,0,0};
   double s1, s2, s3;
   // determine initial parameters and border corrections by optical detector type and scintillation type
@@ -138,11 +155,28 @@ int semi_analytic_hits::VUVHits(const int &Nphotons_created, const TVector3 &Sci
   double GH_correction = GaisserHillas(distance, pars_ini);
 
 
-  // apply correction
-  int hits_vuv = 0 ;
-  hits_vuv = gRandom->Poisson(GH_correction*hits_geo/cosine);
 
+
+
+  // apply correction
+  double hits_vuv = 0 ;
+  hits_vuv = gRandom->Poisson(GH_correction*hits_geo/cosine);
+  if(debug_2){
+  cout << "VUV hits: " << hits_vuv << endl;
+  std::cout<< " Nphotons_created = " << Nphotons_created << std::endl;
+  std::cout<< " hits_geo = " << hits_geo << std::endl;
+  std::cout << " distance = " << distance << std::endl;
+  std::cout<< " GH_correction/cosine = " << GH_correction/cosine << std::endl;
+  std::cout << " hits_vuv = " << hits_vuv << std::endl;
+  std::cout<< " GH_correction = " << GH_correction << std::endl;
+  std::cout<< " cosine = " << cosine << std::endl;
+  std::cout<< " hits_geo/Nphotons_created = " << hits_geo/Nphotons_created << std::endl;
+  std::cout<<" Solid Anlge = " << solid_angle << std::endl;
+  if(hits_vuv < 0) {return hits_geo;}
+  if(hits_vuv >= Nphotons_created || hits_vuv>= 1.2*hits_geo){return hits_geo;}
+  }
   return hits_vuv;
+  //return hits_geo;
 }
 
 // gaisser-hillas function definition
@@ -178,6 +212,7 @@ double semi_analytic_hits::solid(const SiPM& out, const TVector3 &v) const{
    // We need to change this
 
    TVector3 v_copy = v;
+   cout << "DET SIZE: " << out.h << " " << out.w << endl;
 
    // The hit is directly above the SiPM
   if( v.Y()==0.0 && v.Z()==0.0){

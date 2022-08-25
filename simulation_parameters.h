@@ -11,7 +11,7 @@ namespace parameters {
     //--------Simulation Settings-----------
     ///-------------------------------------
     // Xenon doping
-    const bool simulate_xenon = true;   // enables xenon doping, false = pure argon
+    const bool simulate_xenon = false;   // enables xenon doping, false = pure argon
 
     // WLS Reflective foils
     const bool include_reflected = false; // enables WLS relfective foils on the cathode (visible light)
@@ -134,7 +134,7 @@ namespace parameters {
     const double min_z = 0.0;
 
     // timing parametersiation properties
-    const double timing_discretisation_step_size = 1.0; // cm
+    const double timing_discretisation_step_size = 2.12; // cm
 
 	// photon detection system properties
 	const double quantum_efficiency = 0.035;	   // arapuca QE
@@ -158,8 +158,8 @@ namespace parameters {
     const double scint_time_window = 0.00001;   // 10 us
     // argon
     // timing
-    const double t_singlet = 0.000000006;       // 6ns
-    const double t_triplet = 0.0000015;         // 1.5 us
+    const double t_singlet = 6e-9;//0.000000006;       // 6ns
+    const double t_triplet = 1.5e-6;//0.0000015;         // 1.5 us
     // prompt/late ratio
     // electron-like
     const double singlet_fraction_electron = 0.30;

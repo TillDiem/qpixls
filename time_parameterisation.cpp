@@ -115,8 +115,8 @@ void time_parameterisation::generateparam(const int &index, const int &angle_bin
 }
 
 // VUV arrival times calculation function
+// TAKES THE DISTANCE IN CM
 std::vector<double> time_parameterisation::getVUVTime(const double &distance, const int &angle_bin, const int &number_photons) {
-
     // pre-allocate memory
     std::vector<double> arrival_time_distrb;
     arrival_time_distrb.clear();

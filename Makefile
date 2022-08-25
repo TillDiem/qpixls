@@ -2,7 +2,6 @@ CXXFLAGS=-std=c++11 -g $(shell root-config --cflags)
 LIBS=$(shell root-config --libs) -lMathMore
 
 run : analyze_light
-			cp Input/single_electron.root ./
 			@echo "Finished Compiling..."
 			@echo "To run: ./analyze_light"
 

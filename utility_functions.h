@@ -11,14 +11,14 @@ private:
 	TF1 *fScintillation_function_electron = nullptr;
         TF1 *fScintillation_function_alpha = nullptr;
         TF1 *fScintillation_function_prompt = nullptr;
-        TF1 *fScintillation_function_xenon = nullptr;                
+        TF1 *fScintillation_function_xenon = nullptr;
 
 public:
 
 	// constructor
 	utility_functions(){};
 
-	// destructor 
+	// destructor
 	~utility_functions();
 
 	// poisson distribution function
@@ -29,9 +29,11 @@ public:
         void initalise_scintillation_functions_argon(const double t_singlet, const double t_triplet, const double singlet_fraction_electron, const double triplet_fraction_electron,
                                                         const double singlet_fraction_alpha, const double triplet_fraction_alpha, const double scint_time_window);
         void initalise_scintillation_functions_xenon(const double t_singlet_Xe, const double t_triplet_Xe, const double singlet_fraction_Xe, const double triplet_fraction_Xe,
-                                                        const double scint_time_window);  
+                                                        const double scint_time_window);
 
+	// RETURNS THE SCINTILLATION TIME IN SECONDS
         double get_scintillation_time_electron() { return fScintillation_function_electron->GetRandom(); }
+
         double get_scintillation_time_alpha() { return fScintillation_function_alpha->GetRandom(); }
         double get_scintillation_time_prompt() { return fScintillation_function_prompt->GetRandom(); }
         double get_scintillation_time_xenon() { return fScintillation_function_xenon->GetRandom(); }
