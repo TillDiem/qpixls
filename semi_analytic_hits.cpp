@@ -55,6 +55,8 @@ int semi_analytic_hits::VUVHits(const int &Nphotons_created, const TVector3 &Sci
   double cosine;
   double theta;
 
+  cout << "Nphotons_created: " << Nphotons_created << endl;
+
   // distance from center for border corrections
   double r_distance = -1;
   // calculate solid angle:
@@ -87,12 +89,32 @@ int semi_analytic_hits::VUVHits(const int &Nphotons_created, const TVector3 &Sci
     else {std::cout << "Error: optical_direction not set correctly" << std::endl; exit(1);}
 
 
+
+
     detPoint.w = y_dimension_detector; detPoint.h = z_dimension_detector; // width and height in cm of arapuca active window
     TVector3 ScintPoint_rel = ScintPoint_Temp - OpDetPoint_Temp;
 
+    if (cosine < 0.001)
+	    solid_angle = 0;
+    else
+    	solid_angle = solid(detPoint, ScintPoint_rel);
+
     // calculate solid angle
-    solid_angle = solid(detPoint, ScintPoint_rel);
-    assert(r_distance >= 0 && solid_angle >= 0);
+    cout << detPoint.az << " " << detPoint.ay << " " << detPoint.ax << " " << solid_angle << endl;
+    cout << ScintPoint_rel[0] << " " << ScintPoint_rel[1] << " " << ScintPoint_rel[2] << endl;
+    cout << "solid angle: " << solid_angle << endl;
+    cout << "distance: " << r_distance << endl;
+    cout << "cosine: " << cosine << endl;
+    cout << "distance: " << distance << endl;
+
+    if(solid_angle < 0){
+	    std::cout << "Error: solid angle is negative" << std::endl;
+	    exit(1);
+    }
+    if(r_distance < 0){
+	    std::cout << "Error: r_distance is negative" << std::endl;
+	    exit(1);
+    }
   }
    else {
     std::cout << "Error: Invalid optical detector type." << endl;
@@ -100,6 +122,8 @@ int semi_analytic_hits::VUVHits(const int &Nphotons_created, const TVector3 &Sci
   }
 
   theta = acos(cosine)*180./pi;
+
+  cout << "theta: " << theta << endl;
   // calculate number of photons hits by geometric acceptance: accounting for solid angle and LAr absorbtion length
   double hits_geo = exp(-1.*distance/L_abs) * (solid_angle / (4*pi)) * Nphotons_created;
   if(debug_2){

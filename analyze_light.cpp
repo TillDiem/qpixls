@@ -25,14 +25,30 @@ bool debug = false;
 int main(int argc, char* argv[]){
 
 	if(argc < 4){
-		cout << "Usage: " << argv[0] << " <G4_input_file> <SiPM_placement_file> <PixelSize(cm)>" << endl;
+		cout << "Usage: " << argv[0] << " <G4_input_file> <SiPM_placement_file> <PixelSize(cm)> <OutputFile> (<inlcude_input>)" << endl;
 		return 1;
 	}
+
+	bool include_input = true;
+	if(argc>5){
+		include_input  = stoi(argv[5]);
+	}
+	else{
+		include_input = true;
+	}
+
 	cout << endl;
 	cout << endl;
 	cout << "Running with G4 file: " << argv[1] << endl;
 	cout << "Running with SiPM file: " << argv[2] << endl;
 	cout << "Running with a Pixel Size of : " << stod(argv[3]) << " cm" << endl;
+	cout << "Output File: " << argv[4];
+	if(include_input){
+		cout << " - Including input tree event_tree in output" << endl;
+	}
+	else{
+		cout << " - Not Including input tree event_tree in output" << endl;
+	}
 	cout << endl;
 
 	gRandom->SetSeed(0);
@@ -79,10 +95,10 @@ int main(int argc, char* argv[]){
 
 	// ------- Read G4 simulation data --------
 	// READ IN THE G4 SIMULATION  - CURRENTLY HARDCODED
-	char* G4OutputFileName = argv[1];
-	TFile * G4OutputFile = new TFile(G4OutputFileName);
+	char* G4InputFileName = argv[1];
+	TFile * G4InputFile = new TFile(G4InputFileName);
 
-	TTree *G4OutputTree = (TTree*)G4OutputFile->Get("event_tree");
+	TTree *G4InputTree = (TTree*)G4InputFile->Get("event_tree");
 
 	double energy_deposit;
 	vector <double> *hit_start_x = nullptr;
@@ -95,27 +111,30 @@ int main(int argc, char* argv[]){
   	vector<double> *hit_track_id= nullptr;
 	double pixel_size;
 
-	G4OutputTree->SetBranchAddress("energy_deposit", &energy_deposit);
-	G4OutputTree->SetBranchAddress("hit_start_x", &hit_start_x);
-	G4OutputTree->SetBranchAddress("hit_start_y", &hit_start_y);
-	G4OutputTree->SetBranchAddress("hit_start_z", &hit_start_z);
-	G4OutputTree->SetBranchAddress("hit_length", &hit_length);
-	G4OutputTree->SetBranchAddress("hit_start_t", &hit_start_t);
-	G4OutputTree->SetBranchAddress("hit_energy_deposit", &hit_energy_deposit);
-	G4OutputTree->SetBranchAddress("hit_length", &hit_length);
-  	G4OutputTree->SetBranchAddress("hit_track_id", &hit_track_id);
-  	G4OutputTree->SetBranchAddress("particle_pdg_code", &particle_pdg_code);
 
-	int NEventsToLoopOver = G4OutputTree->GetEntries(); // 100000
-	data_output output_file(parameters::output_file_name, parameters::include_timings, parameters::include_reflected, G4OutputFileName );
+	G4InputTree->SetBranchAddress("energy_deposit", &energy_deposit);
+	G4InputTree->SetBranchAddress("hit_start_x", &hit_start_x);
+	G4InputTree->SetBranchAddress("hit_start_y", &hit_start_y);
+	G4InputTree->SetBranchAddress("hit_start_z", &hit_start_z);
+	G4InputTree->SetBranchAddress("hit_length", &hit_length);
+	G4InputTree->SetBranchAddress("hit_start_t", &hit_start_t);
+	G4InputTree->SetBranchAddress("hit_energy_deposit", &hit_energy_deposit);
+	G4InputTree->SetBranchAddress("hit_length", &hit_length);
+  	G4InputTree->SetBranchAddress("hit_track_id", &hit_track_id);
+  	G4InputTree->SetBranchAddress("particle_pdg_code", &particle_pdg_code);
+
+	int NEventsToLoopOver =100;// G4InputTree->GetEntries(); // 100000
+	data_output output_file(argv[4], include_input, parameters::include_timings, parameters::include_reflected, G4InputFileName );
         //char *second = "output.root";
 	//data_output output_file(second, parameters::include_timings, parameters::include_reflected, G4OutputFileName );
+	double SiPM_QE = 0.25;
+	double total_QE = SiPM_QE;
 
 	for (int EventIt=0; EventIt < NEventsToLoopOver; EventIt++)
 	{
 		//if(EventIt!=1894) continue;
 		std::cout << "Event: " << EventIt << std::endl;
-		G4OutputTree->GetEntry(EventIt);
+		G4InputTree->GetEntry(EventIt);
 
 		int max_events = hit_start_x->size();
 
@@ -157,7 +176,7 @@ int main(int argc, char* argv[]){
 		dEdx_avg /= hit_start_x->size();
 		// Loop over the hits
 
-		cout << "Number of photons: " << sumPhotons << endl;
+		cout << "Number of photons: " << total_QE*sumPhotons << endl;
 		cout << "Energy Deposit: " << energy_deposit << endl;
 		cout << "dEdx: " << dEdx_avg << endl;
 
@@ -198,12 +217,13 @@ int main(int argc, char* argv[]){
 
 				// Light yield for the hit currently looked at
 				double light_yield = lightyield[i];
+
 				LY_Avg += light_yield;
 				LY_count++;
-
-				// Total amount of photons produced at this hit
+				//cout << "Light yield: " << light_yield << endl;
+								// Total amount of photons produced at this hit
 		    		unsigned int number_photons;
-		    		number_photons = light_yield*hit_energy_deposit->at(i);//utility.poisson(light_yield, gRandom->Uniform(1.), energy_deposit);
+		    		number_photons = total_QE*light_yield*hit_energy_deposit->at(i);//utility.poisson(light_yield, gRandom->Uniform(1.), energy_deposit);
 		    	        /* cout << "Event: " << EventIt << " Hit: " << i << " OpDet: " << op_channel << endl; */
 				/* cout << " Number of photons: " << number_photons << endl; */
 				/* cout << " light_yield: " << light_yield << endl; */

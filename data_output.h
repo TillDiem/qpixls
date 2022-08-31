@@ -46,7 +46,7 @@ private:
 public:
 
 	// constructor
-	data_output(const char* output_file_name, const bool include_timings, const bool include_reflected, const char* original_file_name);
+	data_output(const char* output_file_name,const bool include_input, const bool include_timings, const bool include_reflected, const char* original_file_name);
 
 	void add_data_till(const int &hit_number, const std::vector<int> &detector_position,const std::vector<int> &num_VUV, const std::vector<TVector3> &ScintPoint, const std::vector<std::vector<double>> &times_vuv);
 	void add_data_till(const std::vector<std::vector<double>> &times_vuv);
