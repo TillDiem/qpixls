@@ -35,18 +35,58 @@ void semi_analytic_hits::setPixelSize(const double y,const double z){
 
 }
 
-double semi_analytic_hits::LArQL(const double energy_deposit, const double hit_distance, const double electric_field){
-	// returns number of expected photons
-       double Edep = energy_deposit/hit_distance;
-       if(Edep<1.0){
-	       //std::cout << "WARNING: LArQL not able to calculate the light yield for energy deposit less than 1 MeV/cm." << std::endl;
-	       //std::cout << "	 Edep is set from " << Edep << " to 1.0" << std::endl;
-	       Edep = 1.0;
-	}
-       double QChi = chi_param[0]/(chi_param[1]+exp(chi_param[3] + chi_param[4]*Edep));
-       double Qcorr = exp(-electric_field/(fcorr_param[0]*log(Edep)+fcorr_param[1]));
-       return (1e6/Wion)*(1+Nex_Ni - QChi*Qcorr - birks_A/(1+birks_k*Edep/(pLAr*electric_field)));
+double QBirks(double dE, double dx, double E){
+
+double k_Birks=0.0486;
+double A_Birks=0.800;
+double Wion = 23.6 ;
+double Nex_Ni = 0.29;
+double Ni = 1.0e6/Wion;
+double pLAr = 1.30;
+
+    double edep = dE/dx;
+    if(edep<1) edep = 1.;
+    double nom = A_Birks/Wion;
+    double denom = 1+ k_Birks*edep /(pLAr * E);
+    return nom/denom*1.0e6;
 }
+
+double Corr(double dE, double dx, double E){
+    double alpha = 0.032;
+    double beta = 0.008258;
+    double edep = dE/dx;
+    if(edep<1) edep = 1.;
+    return exp(-E/(alpha *log(edep) + beta));
+}
+
+double QChi(double dE, double dx, double E){
+    vector<double> chi_param = {2.151572666e-5, -3.988504, 1.38343421, 1.9919521e-6};
+    double edep = dE/dx;
+    if(edep<1) edep = 1.;
+    return chi_param[0]/(chi_param[1]+exp(chi_param[2] + chi_param[3]*edep));
+}
+
+double Qinf(double dE, double dx,double  E){
+
+double k_Birks=0.0486;
+double A_Birks=0.800;
+double Wion = 23.6 ;
+double Nex_Ni = 0.29;
+double Ni = 1.0e6/Wion;
+double pLAr = 1.30;
+
+    return 1.0e6/Wion;
+}
+
+double semi_analytic_hits::LArQL(const double energy_deposit, const double hit_distance, const double electric_field){
+    return Nex_Ni * Ni + Ni - semi_analytic_hits::LArQQ(energy_deposit,hit_distance, electric_field);
+}
+
+double semi_analytic_hits::LArQQ(const double energy_deposit, const double hit_distance, const double electric_field){
+    return QBirks(energy_deposit, hit_distance, electric_field)+Corr(energy_deposit, hit_distance, electric_field)*QChi(energy_deposit, hit_distance, electric_field)*Qinf(energy_deposit, hit_distance, electric_field);
+  }
+
+
 // VUV hits calculation
 int semi_analytic_hits::VUVHits(const int &Nphotons_created, const TVector3 &ScintPoint, const TVector3 &OpDetPoint, const int &optical_detector_type, const int &scintillation_type, const int &optical_direction) {
 
@@ -55,7 +95,6 @@ int semi_analytic_hits::VUVHits(const int &Nphotons_created, const TVector3 &Sci
   double cosine;
   double theta;
 
-  cout << "Nphotons_created: " << Nphotons_created << endl;
 
   // distance from center for border corrections
   double r_distance = -1;
@@ -100,14 +139,7 @@ int semi_analytic_hits::VUVHits(const int &Nphotons_created, const TVector3 &Sci
     	solid_angle = solid(detPoint, ScintPoint_rel);
 
     // calculate solid angle
-    cout << detPoint.az << " " << detPoint.ay << " " << detPoint.ax << " " << solid_angle << endl;
-    cout << ScintPoint_rel[0] << " " << ScintPoint_rel[1] << " " << ScintPoint_rel[2] << endl;
-    cout << "solid angle: " << solid_angle << endl;
-    cout << "distance: " << r_distance << endl;
-    cout << "cosine: " << cosine << endl;
-    cout << "distance: " << distance << endl;
-
-    if(solid_angle < 0){
+   if(solid_angle < 0){
 	    std::cout << "Error: solid angle is negative" << std::endl;
 	    exit(1);
     }
@@ -123,7 +155,6 @@ int semi_analytic_hits::VUVHits(const int &Nphotons_created, const TVector3 &Sci
 
   theta = acos(cosine)*180./pi;
 
-  cout << "theta: " << theta << endl;
   // calculate number of photons hits by geometric acceptance: accounting for solid angle and LAr absorbtion length
   double hits_geo = exp(-1.*distance/L_abs) * (solid_angle / (4*pi)) * Nphotons_created;
   if(debug_2){

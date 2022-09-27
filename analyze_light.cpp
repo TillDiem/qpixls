@@ -123,11 +123,11 @@ int main(int argc, char* argv[]){
   	G4InputTree->SetBranchAddress("hit_track_id", &hit_track_id);
   	G4InputTree->SetBranchAddress("particle_pdg_code", &particle_pdg_code);
 
-	int NEventsToLoopOver =100;// G4InputTree->GetEntries(); // 100000
+	int NEventsToLoopOver = G4InputTree->GetEntries(); // 100000
 	data_output output_file(argv[4], include_input, parameters::include_timings, parameters::include_reflected, G4InputFileName );
         //char *second = "output.root";
 	//data_output output_file(second, parameters::include_timings, parameters::include_reflected, G4OutputFileName );
-	double SiPM_QE = 0.25;
+	double SiPM_QE = 0.4;
 	double total_QE = SiPM_QE;
 
 	for (int EventIt=0; EventIt < NEventsToLoopOver; EventIt++)
@@ -162,12 +162,14 @@ int main(int argc, char* argv[]){
 
 		// Determining the number of photons due to each hit
 		std::vector<double> lightyield(hit_start_x->size());
+		std::vector<double> chargeyield(hit_start_x->size());
 		std::vector<double> numPhotons(hit_start_x->size());
 		int sumPhotons = 0;
 		std::vector<double> dEdx(hit_start_x->size());
 		double dEdx_avg=0;
 		for (int i=0; i < hit_start_x->size(); i++){
 				lightyield[i] = hits_model.LArQL(hit_energy_deposit->at(i), hit_length->at(i), 0.5);
+				chargeyield[i] = hits_model.LArQQ(hit_energy_deposit->at(i), hit_length->at(i), 0.5);
 				numPhotons[i] = lightyield[i] * hit_energy_deposit->at(i);
 				sumPhotons += numPhotons[i];
 				dEdx[i] = hit_energy_deposit->at(i) / hit_length->at(i);
@@ -301,21 +303,22 @@ int main(int argc, char* argv[]){
 					if(pdg==22 || abs(pdg)==11 || abs(pdg)==12 || abs(pdg)==13 || abs(pdg)==14){
 						emission_time = utility.get_scintillation_time_electron()*1000000.0; // in us
 					}
-					else if(pdg == 2212 || pdg == 2112 || pdg == 1000020040){
+					else if(pdg == 2212 || pdg == 2112 || pdg >= 1000000000){
 						emission_time = utility.get_scintillation_time_alpha()*1000000.0; // in us
 					}
 					else{
 					        emission_time = utility.get_scintillation_time_electron()*1000000.0; // in us
 					}
-					double total_time = time_hit+(x*0.001 + emission_time + 2.5*0.001); // in microseconds // WLS 2.5 ns?
+					double total_time = time_hit+(x*0.001 + emission_time + 2.5*0.001); // in microseconds // WLS 2.5 ns - constant offset
 					total_time_vuv.push_back(total_time);
 				}// End for transporttime
 		    } // end of hit
 		total_time_vuv_array.push_back(total_time_vuv);
 		} // End of SiPM Loop
-	lightyield.clear();
 	cout << "Photons stored for Event " << EventIt << ": " << nPhotons << endl;
-	output_file.add_data_till(total_time_vuv_array);
+	output_file.add_data_till(total_time_vuv_array, lightyield, chargeyield);
+	lightyield.clear();
+	chargeyield.clear();
 	} // end event loop
 
      //Write to OUTPUT FILE

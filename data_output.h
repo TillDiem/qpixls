@@ -26,6 +26,8 @@ private:
 	// tree entries:
 	std::vector<int> SiPM_id;
 	std::vector<std::vector<double>> total_time_vuv;
+	std::vector<double> LightYield;
+	std::vector<double> ChargeYield;
 
 
 
@@ -50,6 +52,7 @@ public:
 
 	void add_data_till(const int &hit_number, const std::vector<int> &detector_position,const std::vector<int> &num_VUV, const std::vector<TVector3> &ScintPoint, const std::vector<std::vector<double>> &times_vuv);
 	void add_data_till(const std::vector<std::vector<double>> &times_vuv);
+	void add_data_till(const std::vector<std::vector<double>> &times_vuv, const std::vector<double> &light_yield, const std::vector<double> &chargeyield);
 
 	// destructor
 	~data_output();

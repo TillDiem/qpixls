@@ -27,8 +27,8 @@ private:
 	//                    	OPTICAL DETECTOR SHAPE/SIZE
 	// *************************************************************************************************
 	// Supercells: type = 1;
-	double y_dimension_detector = 9.3;	// cm
-	double z_dimension_detector = 46.8;	// cm
+	double y_dimension_detector = 10;	// cm
+	double z_dimension_detector = 10;	// cm
 	// PMTs: type = 0;
 	double radius = 8*2.54/2.;	//	8" PMT diameter  // cm
 
@@ -62,6 +62,7 @@ private:
 	const double Wion = 23.6;      // Energy per ion pair separatoin From PhD Thesis https://ora.ox.ac.uk/objects/uuid:43186aa5-f3df-4241-91a9-2d6c574ab5cf
 	const double pLAr = 1.30;      //  Density LAr
 	const double Nex_Ni = 0.29;     // exitation to ion ratio - from the LArQL Paper
+	const double Ni = 1.0e6/Wion;
 	std::vector<double> chi_param = {2.151572666e-5, -3.988504, 1.38343421, 1.9919521e-6}; // Parameters for the Chi(dEdx) function - fit to plot from LArQL Paper
 	std::vector<double> fcorr_param = {0.032, 0.008258}; // Parameters for fCorr function - fit to plot from LArQL Paper
 
@@ -348,6 +349,7 @@ public:
 	// linear interpolation function
 	double interpolate( const std::vector<double> &xData, const std::vector<double> &yData, double x, bool extrapolate );
 	double LArQL(const double energy_deposit, const double hit_distance, const double electric_field);
+	double LArQQ(const double energy_deposit, const double hit_distance, const double electric_field);
 	void setPixelSize(const double y, const double z);
 
 };

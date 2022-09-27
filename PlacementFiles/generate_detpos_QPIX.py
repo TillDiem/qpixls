@@ -1,6 +1,6 @@
-xlen = 160
-ylen = 260
-zlen = 100
+xlen = 1400
+ylen = 600
+zlen = 360
 
 pixel_size = 10
 
@@ -19,54 +19,54 @@ num = 0
 #         num += 1
 #     i += 1
 
-# z= 0 plane
+#z= 0 plane
+i = j = 0;
+while( i<x_num ):
+    j = 0
+    while( j<y_num ):
+        print( num, pixel_size/2 + i*pixel_size, pixel_size/2 + j*pixel_size, 0 , 1, 3 )
+        j += 1
+        num += 1
+    i += 1
+
+
+# # y = 0 plane
 # i = j = 0;
 # while( i<x_num ):
 #     j = 0
-#     while( j<y_num ):
-#         print( num, pixel_size/2 + i*pixel_size, pixel_size/2 + j*pixel_size, 0 , 1, 3 )
+#     while( j<z_num ):
+#         print( num, pixel_size/2 + i*pixel_size, 0 , pixel_size/2 + j*pixel_size, 1, 2 )
+#         j += 1
+#         num += 1
+#     i += 1
+
+# # # y = 600  plane
+# i = j = 0;
+# while( i<x_num ):
+#     j = 0
+#     while( j<z_num ):
+#         print( num, pixel_size/2 + i*pixel_size, ylen , pixel_size/2 + j*pixel_size, 1, 2 )
 #         j += 1
 #         num += 1
 #     i += 1
 
 
-# y = 0 plane
-i = j = 0;
-while( i<x_num ):
-    j = 0
-    while( j<z_num ):
-        print( num, pixel_size/2 + i*pixel_size, 0 , pixel_size/2 + j*pixel_size, 1, 2 )
-        j += 1
-        num += 1
-    i += 1
+# # x = 0 plane
+# i = j = 0;
+# while( i<y_num ):
+#     j = 0
+#     while( j<z_num ):
+#         print( num, 0, pixel_size/2 + i*pixel_size , pixel_size/2 + j*pixel_size, 1, 1 )
+#         j += 1
+#         num += 1
+#     i += 1
 
-# # y = 600  plane
-i = j = 0;
-while( i<x_num ):
-    j = 0
-    while( j<z_num ):
-        print( num, pixel_size/2 + i*pixel_size, ylen , pixel_size/2 + j*pixel_size, 1, 2 )
-        j += 1
-        num += 1
-    i += 1
-
-
-# x = 0 plane
-i = j = 0;
-while( i<y_num ):
-    j = 0
-    while( j<z_num ):
-        print( num, 0, pixel_size/2 + i*pixel_size , pixel_size/2 + j*pixel_size, 1, 1 )
-        j += 1
-        num += 1
-    i += 1
-
-# # x = 230  plane
-i = j = 0;
-while( i<y_num ):
-    j = 0
-    while( j<z_num ):
-        print( num, xlen,  pixel_size/2 + i*pixel_size, pixel_size/2 + j*pixel_size, 1, 1 )
-        j += 1
-        num += 1
-    i += 1
+# # # x = 230  plane
+# i = j = 0;
+# while( i<y_num ):
+#     j = 0
+#     while( j<z_num ):
+#         print( num, xlen,  pixel_size/2 + i*pixel_size, pixel_size/2 + j*pixel_size, 1, 1 )
+#         j += 1
+#         num += 1
+#     i += 1

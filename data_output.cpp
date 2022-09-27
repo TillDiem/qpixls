@@ -38,7 +38,8 @@ data_output::data_output(const char* output_file_name, const bool include_input,
 	// create the acutall output trees we need
 	test_tree = new TTree("ScintSim_tree", "Scintillation Light Simulation");
 	test_tree->Branch("total_time_vuv", &total_time_vuv); //A vector of vectors ([[PMT1: t1,t2,t3,...],[PMT2: t1,t2,t3,...],[PMT3: ...],[PMT4: ...] ... ])
-	//test_tree->Branch("LightYield", &LightYield);
+	test_tree->Branch("LightYield", &LightYield);
+	test_tree->Branch("ChargeYield", &ChargeYield);
 
 }
 
@@ -49,7 +50,9 @@ data_output::~data_output(){
 }
 
 
-void data_output::add_data_till(const std::vector<std::vector<double>> &times_vuv) {
+void data_output::add_data_till(const std::vector<std::vector<double>> &times_vuv, const std::vector<double> &light_yield, const std::vector<double> &chargeyield){
     total_time_vuv = times_vuv;
+    LightYield = light_yield;
+    ChargeYield = chargeyield;
     test_tree->Fill();
 }
